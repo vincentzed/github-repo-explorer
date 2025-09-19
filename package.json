@@ -16,6 +16,7 @@
     "@octokit/rest": "^22.0.0",
     "@primer/primitives": "^11.1.0",
     "@primer/react": "^37.31.0",
+    "@primer/react-brand": "^0.58.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",

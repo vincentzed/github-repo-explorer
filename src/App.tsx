@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react'
 import {
-  Box, Button, FormControl, Heading, Link, PageHeader,
-  Select, Spinner, TextInput, Text, Flash, Label
+  Box, Heading, Link, PageHeader, Spinner, Text, Flash
 } from '@primer/react'
+import {
+  Button, ButtonGroup, FormControl, TextInput, Select, Label, Card, Section
+} from '@primer/react-brand'
 import type { Repository, SearchFilters, SearchResponse, SearchState } from './types'
 
 const initialFilters: SearchFilters = {
@@ -52,7 +54,6 @@ const SearchInput = ({ label, value, onChange, placeholder, name, onEnter }: Sea
         if (e.key === 'Enter' && onEnter) onEnter()
       }}
       placeholder={placeholder}
-      sx={{ fontFamily: 'mono' }}
     />
   </FormControl>
 )
@@ -68,7 +69,7 @@ type SearchSelectProps = {
 const SearchSelect = ({ label, value, onChange, options, name }: SearchSelectProps) => (
   <FormControl>
     <FormControl.Label>{label}</FormControl.Label>
-    <Select name={name} value={value} onChange={e => onChange(e.target.value)} sx={{ fontFamily: 'mono' }}>
+    <Select name={name} value={value} onChange={e => onChange(e.target.value)}>
       {options.map(opt => (
         <Select.Option key={opt.value} value={opt.value}>
           {opt.label}
@@ -79,52 +80,34 @@ const SearchSelect = ({ label, value, onChange, options, name }: SearchSelectPro
 )
 
 function RepoCard({ repo }: { repo: Repository }) {
+  // Create a concise description with metadata
+  const metadata = [
+    `★ ${repo.stargazers_count}`,
+    `⑂ ${repo.forks_count}`,
+    `Created ${new Date(repo.created_at).toISOString().slice(0, 10)}`,
+    `Updated ${new Date(repo.updated_at).toISOString().slice(0, 10)}`
+  ].join(' • ')
+
+  const description = repo.description
+    ? `${repo.description} • ${metadata}`
+    : metadata
+
+  // Create labels for language, topics, and license
+  const labels = []
+  if (repo.language) labels.push(repo.language)
+  if (repo.topics) labels.push(...repo.topics.slice(0, 3))
+  if (repo.license?.name) labels.push(repo.license.name)
+
+  const label = labels.length > 0 ? labels[0] : undefined
+
   return (
-    <Box
-      as={Link}
+    <Card
       href={repo.html_url}
-      target="_blank"
-      rel="noreferrer"
-      sx={{
-        display: 'block',
-        textDecoration: 'none',
-        color: 'inherit',
-        border: '1px solid',
-        borderColor: 'border.default',
-        borderRadius: 2,
-        p: 3,
-        '&:hover': { backgroundColor: 'canvas.subtle' },
-      }}
-    >
-      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 2 }}>
-        <Box>
-          <Heading as="h3" sx={{ fontSize: 2, fontWeight: 'bold', mb: 1 }}>
-            {repo.full_name}
-          </Heading>
-          {repo.description && (
-            <Text sx={{ fontSize: 1, color: 'fg.muted', mb: 2, display: 'block' }}>
-              {repo.description}
-            </Text>
-          )}
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
-            {repo.language && <Label size="small">{repo.language}</Label>}
-            {repo.topics?.slice(0, 5).map(t => (
-              <Label key={t} size="small" variant="secondary">{t}</Label>
-            ))}
-            {repo.license && repo.license.name && (
-              <Label size="small" variant="accent">{repo.license.name}</Label>
-            )}
-          </Box>
-          <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
-            Created {new Date(repo.created_at).toISOString().slice(0, 10)} • Updated {new Date(repo.updated_at).toISOString().slice(0, 10)}
-          </Text>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', fontSize: 0 }}>
-          <Text title="Stars" sx={{ color: 'fg.muted' }}>★ {repo.stargazers_count}</Text>
-          <Text title="Forks" sx={{ color: 'fg.muted' }}>⑂ {repo.forks_count}</Text>
-        </Box>
-      </Box>
-    </Box>
+      heading={repo.full_name}
+      description={description}
+      label={label}
+      ctaText="View on GitHub"
+    />
   )
 }
 
@@ -254,8 +237,8 @@ export default function App() {
         </PageHeader.Actions>
       </PageHeader>
 
-      <Box as="main" sx={{ p: 3 }}>
-        <Box as="section" sx={{ mb: 4 }}>
+      <Box as="main">
+        <Section>
           <Box
             sx={{
               display: 'grid',
@@ -305,19 +288,22 @@ export default function App() {
           </Box>
 
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-            <Button variant="primary" onClick={performSearch} disabled={state.loading} leadingVisual={state.loading ? Spinner : undefined}>
-              {state.loading ? 'Searching...' : 'Search'}
-            </Button>
-            <Button
-              onClick={() => {
-                setFilters(initialFilters)
-                setState(s => ({ ...s, results: [], totalCount: 0, error: null, status: null }))
-                setCache(null)
-                setHasSearched(false)
-              }}
-            >
-              Clear
-            </Button>
+            <ButtonGroup>
+              <Button variant="primary" onClick={performSearch} disabled={state.loading}>
+                {state.loading ? 'Searching...' : 'Search'}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setFilters(initialFilters)
+                  setState(s => ({ ...s, results: [], totalCount: 0, error: null, status: null }))
+                  setCache(null)
+                  setHasSearched(false)
+                }}
+              >
+                Clear
+              </Button>
+            </ButtonGroup>
             <Text sx={{ fontSize: 1, color: 'fg.muted' }}>
               {hasSearched ? (
                 <>
@@ -332,9 +318,9 @@ export default function App() {
               </Flash>
             )}
           </Box>
-        </Box>
+        </Section>
 
-        <Box as="section" sx={{ display: 'grid', gap: 3 }}>
+        <Section>
           {state.loading && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Spinner size="small" />
@@ -354,7 +340,7 @@ export default function App() {
           <Box sx={{ display: 'grid', gap: 3 }}>
             {state.results.map(r => <RepoCard key={r.id} repo={r} />)}
           </Box>
-        </Box>
+        </Section>
       </Box>
 
       <Box as="footer" sx={{ borderTop: '1px solid', borderColor: 'border.default', p: 3, fontSize: 1, color: 'fg.muted', textAlign: 'center' }}>
