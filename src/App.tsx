@@ -3,7 +3,7 @@ import {
   Box, Heading, Link, PageHeader, Spinner, Text, Flash
 } from '@primer/react'
 import {
-  Button, ButtonGroup, FormControl, TextInput, Select, Label, Card, Section, SectionIntro
+  Button, ButtonGroup, FormControl, TextInput, Select, Label, Section, SectionIntro
 } from '@primer/react-brand'
 import type { Repository, SearchFilters, SearchResponse, SearchState } from './types'
 
@@ -80,34 +80,61 @@ const SearchSelect = ({ label, value, onChange, options, name }: SearchSelectPro
 )
 
 function RepoCard({ repo }: { repo: Repository }) {
-  // Create a concise description with metadata
-  const metadata = [
-    `★ ${repo.stargazers_count}`,
-    `⑂ ${repo.forks_count}`,
-    `Created ${new Date(repo.created_at).toISOString().slice(0, 10)}`,
-    `Updated ${new Date(repo.updated_at).toISOString().slice(0, 10)}`
-  ].join(' • ')
-
-  const description = repo.description
-    ? `${repo.description} • ${metadata}`
-    : metadata
-
-  // Create labels for language, topics, and license
-  const labels = []
-  if (repo.language) labels.push(repo.language)
-  if (repo.topics) labels.push(...repo.topics.slice(0, 3))
-  if (repo.license?.name) labels.push(repo.license.name)
-
-  const label = labels.length > 0 ? labels[0] : undefined
-
   return (
-    <Card
+    <Box
+      as={Link}
       href={repo.html_url}
-      heading={repo.full_name}
-      description={description}
-      label={label}
-      ctaText="View on GitHub"
-    />
+      target="_blank"
+      rel="noreferrer"
+      sx={{
+        display: 'block',
+        textDecoration: 'none',
+        color: 'inherit',
+        border: '1px solid',
+        borderColor: 'border.default',
+        borderRadius: 2,
+        p: 4,
+        '&:hover': {
+          backgroundColor: 'canvas.subtle',
+          borderColor: 'border.muted'
+        },
+        transition: 'all 0.2s ease'
+      }}
+    >
+      <Box sx={{ mb: 3 }}>
+        <Heading as="h3" sx={{ fontSize: 2, fontWeight: 'bold', mb: 2, color: 'fg.default' }}>
+          {repo.full_name}
+        </Heading>
+        {repo.description && (
+          <Text sx={{ fontSize: 1, color: 'fg.muted', mb: 3, lineHeight: 1.5 }}>
+            {repo.description}
+          </Text>
+        )}
+
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 3 }}>
+          {repo.language && (
+            <Label size="medium">{repo.language}</Label>
+          )}
+          {repo.topics?.slice(0, 4).map(topic => (
+            <Label key={topic} size="medium">{topic}</Label>
+          ))}
+          {repo.license?.name && (
+            <Label size="medium">{repo.license.name}</Label>
+          )}
+        </Box>
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 0, color: 'fg.muted' }}>
+          <Box sx={{ display: 'flex', gap: 3 }}>
+            <Text title="Stars">★ {repo.stargazers_count.toLocaleString()}</Text>
+            <Text title="Forks">⑂ {repo.forks_count.toLocaleString()}</Text>
+          </Box>
+          <Box sx={{ textAlign: 'right' }}>
+            <Text sx={{ display: 'block' }}>Created: {new Date(repo.created_at).toISOString().slice(0, 10)}</Text>
+            <Text sx={{ display: 'block' }}>Updated: {new Date(repo.updated_at).toISOString().slice(0, 10)}</Text>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   )
 }
 
