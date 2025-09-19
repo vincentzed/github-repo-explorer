@@ -3,7 +3,7 @@ import {
   Box, Heading, Link, PageHeader, Spinner, Text, Flash
 } from '@primer/react'
 import {
-  Button, ButtonGroup, FormControl, TextInput, Select, Label, Card, Section
+  Button, ButtonGroup, FormControl, TextInput, Select, Label, Card, Section, SectionIntro
 } from '@primer/react-brand'
 import type { Repository, SearchFilters, SearchResponse, SearchState } from './types'
 
@@ -224,27 +224,41 @@ export default function App() {
       <PageHeader>
         <PageHeader.TitleArea>
           <Heading as="h1">GitHub Repository Explorer</Heading>
+          <Text sx={{ fontSize: 1, color: 'fg.muted', mt: 1 }}>
+            Advanced GitHub repository search with caching and filters
+          </Text>
         </PageHeader.TitleArea>
         <PageHeader.Actions>
-          <Text sx={{ fontSize: 1, color: 'fg.muted' }}>
-            Status: {state.status ?? '—'} {state.incompleteResults ? '(incomplete)' : ''}
-            {state.rateLimit && (
-              <Text as="span" sx={{ ml: 2 }}>
-                RL {state.rateLimit.remaining}/{state.rateLimit.limit}
+          {(state.status || state.rateLimit) && (
+            <Box sx={{ textAlign: 'right' }}>
+              <Text sx={{ fontSize: 0, color: 'fg.muted', display: 'block' }}>
+                {state.status && `Status: ${state.status}${state.incompleteResults ? ' (incomplete)' : ''}`}
               </Text>
-            )}
-          </Text>
+              {state.rateLimit && (
+                <Text sx={{ fontSize: 0, color: 'fg.muted', display: 'block' }}>
+                  Rate Limit: {state.rateLimit.remaining}/{state.rateLimit.limit}
+                </Text>
+              )}
+            </Box>
+          )}
         </PageHeader.Actions>
       </PageHeader>
 
       <Box as="main">
         <Section>
+          <SectionIntro align="center">
+            <SectionIntro.Heading size="3">Search Filters</SectionIntro.Heading>
+            <SectionIntro.Description>
+              Use the advanced filters below to find repositories on GitHub. Enter search criteria and click "Search" to explore.
+            </SectionIntro.Description>
+          </SectionIntro>
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-              gap: 3,
-              mb: 3,
+              gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+              gap: 4,
+              mt: 6,
+              mb: 4
             }}
           >
             <SearchInput label="Query" name="query" value={filters.query} placeholder="e.g. cache OR search in:name" onChange={v => updateFilter('query', v)} onEnter={performSearch} />
@@ -287,8 +301,8 @@ export default function App() {
             />
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-            <ButtonGroup>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center', mt: 4 }}>
+            <ButtonGroup size="large">
               <Button variant="primary" onClick={performSearch} disabled={state.loading}>
                 {state.loading ? 'Searching...' : 'Search'}
               </Button>
@@ -304,25 +318,27 @@ export default function App() {
                 Clear
               </Button>
             </ButtonGroup>
-            <Text sx={{ fontSize: 1, color: 'fg.muted' }}>
-              {hasSearched ? (
-                <>
-                  Total: {state.totalCount} results
-                  {canUseCache && <Text as="span" sx={{ color: 'accent.fg' }}> • Using cached data</Text>}
-                </>
-              ) : 'Enter search criteria and click Search'}
-            </Text>
             {state.error && (
-              <Flash variant="danger" sx={{ fontSize: 1 }}>
+              <Flash variant="danger" sx={{ fontSize: 1, maxWidth: '600px' }}>
                 Error: {state.error}
               </Flash>
             )}
           </Box>
         </Section>
 
-        <Section>
+        <Section backgroundColor="subtle">
+          <SectionIntro align="center">
+            <SectionIntro.Heading size="3">Search Results</SectionIntro.Heading>
+            {hasSearched && (
+              <SectionIntro.Description>
+                Found {state.totalCount} repositories
+                {canUseCache && <Text as="span" sx={{ color: 'accent.fg' }}> • Using cached data</Text>}
+              </SectionIntro.Description>
+            )}
+          </SectionIntro>
+
           {state.loading && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, py: 6 }}>
               <Spinner size="small" />
               <Text>Loading…</Text>
             </Box>
@@ -333,11 +349,13 @@ export default function App() {
             </Box>
           )}
           {!state.loading && hasSearched && state.results.length === 0 && (
-            <Text sx={{ color: 'fg.muted' }}>
-              No results found. Try adjusting your search criteria.
-            </Text>
+            <Box sx={{ textAlign: 'center', py: 6 }}>
+              <Text sx={{ color: 'fg.muted' }}>
+                No results found. Try adjusting your search criteria.
+              </Text>
+            </Box>
           )}
-          <Box sx={{ display: 'grid', gap: 3 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: 4, mt: 4 }}>
             {state.results.map(r => <RepoCard key={r.id} repo={r} />)}
           </Box>
         </Section>
